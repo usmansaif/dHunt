@@ -258,6 +258,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   dPauseBtn.style.display = 'none';
   dStopBtn.style.display  = 'none';
 
+  document.getElementById('d-copyrightYear').textContent = new Date().getFullYear();
+
   const savedTheme = localStorage.getItem('dhuntTheme') || 'system';
   document.querySelectorAll('.theme-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.themeVal === savedTheme);
