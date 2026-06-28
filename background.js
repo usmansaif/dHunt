@@ -399,6 +399,15 @@ async function handleHunt(keyword, sendResponse, resumeMode) {
   try {
     let allListings = [...resumeListings];
 
+    // Build a set of all product URLs already stored across all history entries
+    // so we never collect the same product twice across different hunt runs.
+    const { [HISTORY_KEY]: _history = [] } = await chrome.storage.local.get(HISTORY_KEY);
+    const seenUrls = new Set(
+      _history.flatMap(h => (h.results || []).map(p => p.url))
+    );
+    // Also seed with any URLs already in the current hunt's listings (resume case)
+    for (const p of allListings) seenUrls.add(p.url);
+
     if (!canResume) {
       // ── Search phase ──────────────────────────────────────────────────────
       const searchUrl = `https://www.daraz.pk/catalog/?q=${encodeURIComponent(keyword)}&sort=${sortParam}`;
@@ -427,7 +436,8 @@ async function handleHunt(keyword, sendResponse, resumeMode) {
 
         let added = 0;
         for (const p of result.products) {
-          if (!allListings.find(x => x.url === p.url)) {
+          if (!seenUrls.has(p.url)) {
+            seenUrls.add(p.url);
             allListings.push(p);
             added++;
             if (allListings.length >= maxProducts) break;

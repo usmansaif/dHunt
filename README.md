@@ -1,6 +1,10 @@
-# dHunt — Daraz Product Hunter
+<p align="center">
+  <img src="icons/icon128.png" alt="dHunt logo" width="96" />
+</p>
 
-A Chrome extension (Manifest V3) that autonomously browses [Daraz.pk](https://www.daraz.pk), extracts product data across multiple pages, scores each product by demand, and surfaces the best opportunities in a clean dashboard.
+<h1 align="center">dHunt — Daraz Product Hunter</h1>
+
+<p align="center">A Chrome extension (Manifest V3) that autonomously browses <a href="https://www.daraz.pk">Daraz.pk</a>, extracts product data across multiple pages, scores each product by demand, and surfaces the best opportunities in a clean dashboard.</p>
 
 ## Features
 
@@ -101,3 +105,9 @@ A Chrome extension (Manifest V3) that autonomously browses [Daraz.pk](https://ww
 |---------|---------|
 | 0.2.0 | Config/settings panel, resume-after-interrupt, extended product data, history load fix, TOP pinning |
 | 0.1.0 | 7-phase MVP: skeleton → search → enrich → UI → scoring → history → safety |
+
+## Author
+
+**Usman Saif**
+- Email: [usman.saif22@gmail.com](mailto:usman.saif22@gmail.com)
+- GitHub: [@usman-saif22](https://github.com/usman-saif22)
