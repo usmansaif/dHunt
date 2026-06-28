@@ -180,6 +180,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   stopBtn.style.display  = 'none';
   keyword.value = '';
 
+  document.getElementById('d-copyrightYear').textContent = new Date().getFullYear();
+
   const { [STATE_KEY]: state, [THEME_KEY]: savedTheme } = await chrome.storage.local.get([STATE_KEY, THEME_KEY]);
   applyTheme(savedTheme || 'system');
   applyState(state);

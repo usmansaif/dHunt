@@ -480,19 +480,18 @@
       text-align: center; line-height: 1.65;
       color: var(--muted); font-size: 13px;
     }
-    /* Info table */
+    /* Info icons */
     .about-section { padding: 22px 24px 0; }
-    .about-section-label {
-      font-size: 11px; font-weight: 700; letter-spacing: 1px;
-      color: var(--text); text-transform: uppercase; margin-bottom: 12px;
+    .about-icons {
+      display: flex; justify-content: center; gap: 20px;
     }
-    .about-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .about-table td { padding: 8px 0; border-bottom: 1px solid var(--border); }
-    .about-table tr:last-child td { border-bottom: none; }
-    .about-table .at-label { color: var(--muted); }
-    .about-table .at-val   { text-align: right; font-weight: 600; color: var(--text); }
-    .about-table .at-val a { color: var(--accent); text-decoration: none; }
-    .about-table .at-val a:hover { text-decoration: underline; }
+    .about-icon-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      color: var(--muted); text-decoration: none; font-size: 11px;
+      transition: color .15s;
+    }
+    .about-icon-btn:hover { color: var(--accent); }
+    .about-icon-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     /* Footer */
     .about-footer { padding: 22px 24px; }
     .about-copyright { text-align: center; font-size: 12px; color: var(--muted); line-height: 1.8; margin-bottom: 18px; }
@@ -899,21 +898,40 @@
 
     <!-- Extension Information -->
     <div class="about-section">
-      <div class="about-section-label">Extension Information</div>
-      <table class="about-table">
-        <tr><td class="at-label">Developer</td><td class="at-val">Usman Saif</td></tr>
-        <tr><td class="at-label">Email</td><td class="at-val"><a href="mailto:hello@usmansaif.com">hello@usmansaif.com</a></td></tr>
-        <tr><td class="at-label">Website</td><td class="at-val"><a href="https://usmansaif.com" target="_blank" rel="noreferrer">usmansaif.com</a></td></tr>
-        <tr><td class="at-label">Support</td><td class="at-val"><a href="mailto:hello@usmansaif.com">Contact Developer</a></td></tr>
-        <tr><td class="at-label">License</td><td class="at-val">Proprietary</td></tr>
-      </table>
+      <div class="about-icons">
+        <!-- Developer / Person -->
+        <span class="about-icon-btn" title="Usman Saif">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          Usman Saif
+        </span>
+        <!-- Email -->
+        <a class="about-icon-btn" href="mailto:hello@usmansaif.com" title="hello@usmansaif.com">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+          Email
+        </a>
+        <!-- Website -->
+        <a class="about-icon-btn" href="https://usmansaif.com" target="_blank" rel="noreferrer" title="usmansaif.com">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+          Website
+        </a>
+        <!-- Support -->
+        <a class="about-icon-btn" href="mailto:hello@usmansaif.com" title="Contact Developer">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Support
+        </a>
+        <!-- License -->
+        <span class="about-icon-btn" title="Proprietary License">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Proprietary
+        </span>
+      </div>
     </div>
 
     <!-- Footer -->
     <div class="about-footer">
       <div class="about-copyright">
         Built with ❤️ by <strong>Usman Saif</strong><br>
-        © 2026 All Rights Reserved.
+        © <span id="d-copyrightYear"></span> All Rights Reserved.
       </div>
       <div class="about-actions">
         <button class="about-btn-visit" id="d-aboutVisit">Visit Website</button>
