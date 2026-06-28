@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Daraz Product Hunter",
+  "version": "0.2.0",
+  "description": "Autonomously hunt high-demand products on Daraz.pk",
+  "permissions": ["tabs", "storage", "scripting", "alarms", "notifications"],
+  "host_permissions": ["*://*.daraz.pk/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16":  "icons/icon16.png",
+    "32":  "icons/icon32.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Daraz Product Hunter",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "32":  "icons/icon32.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.daraz.pk/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

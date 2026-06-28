@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <title>dHunt — Dashboard</title>
+  <script src="theme-init.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root { --sidebar-w: 190px; }
+
+    [data-theme="dark"] {
+      --bg:#0b0e18; --bg2:#0f1420; --bg3:#161d2e; --border:#1e2a3a;
+      --text:#e2e8f0; --muted:#4a6080; --accent:#f97316; --accent-h:#ea6c0a;
+      --ok:#34d399; --err:#f87171; --info:#60a5fa; --warn:#facc15;
+      --sf-warn-bg:#1a1200; --sf-warn-bd:#5a3800;
+      --sf-cool-bg:#1a1708; --sf-cool-bd:#3a3000;
+      --sf-ok-bg:#0a1f14;   --sf-ok-bd:#1a5030;
+      --sf-err-bg:#1f0a0a;  --sf-err-bd:#501a1a;
+      --sf-info-bg:#0a1428; --sf-info-bd:#1a3050;
+      --warn-box-bg:#1a1200; --warn-box-bd:#604000;
+      --td-color:#94a3b8; --td-bd:#0e1522;
+      --row-hover:#0f1828; --top-pick-bg:#151008; --top-pick-h:#1d1608; --top-divider:#2a2010;
+      --badge-top-bg:#2a1e00; --badge-mall-bg:#0a2030; --badge-mall-c:#60c8fa;
+      --badge-disc-bg:#1a0a0a; --badge-ship-bg:#0a1a0a;
+      --log-hover:#111827; --log-msg-c:#64748b; --log-time-c:#2a3a50;
+      --empty-c:#2a3a50; --ver-c:#2a3a50; --stock-ok-c:#4a6474; --cfg-row-bd:#111927;
+      --btn-dis-bg:#2d3748; --btn-dis-c:#6b7280; --btn-ghost-h-bd:#3a4a60;
+      --btn-danger-bd:#4a2020; --btn-danger-h:#1f0f0f;
+      --ctrl-pause-bd:#2d3f5f; --ctrl-pause-h:#1a2c4a;
+      --ctrl-stop-bd:#4a2020;  --ctrl-stop-h:#2a1010;
+      --btn-ghost-brd-hov:#3a4a60;
+    }
+    [data-theme="light"] {
+      --bg:#f1f5f9; --bg2:#ffffff; --bg3:#f8fafc; --border:#e2e8f0;
+      --text:#0f172a; --muted:#64748b; --accent:#ea580c; --accent-h:#c2410c;
+      --ok:#059669; --err:#dc2626; --info:#2563eb; --warn:#b45309;
+      --sf-warn-bg:#fffbeb; --sf-warn-bd:#fcd34d;
+      --sf-cool-bg:#fffbeb; --sf-cool-bd:#fcd34d;
+      --sf-ok-bg:#ecfdf5;   --sf-ok-bd:#6ee7b7;
+      --sf-err-bg:#fef2f2;  --sf-err-bd:#fca5a5;
+      --sf-info-bg:#eff6ff; --sf-info-bd:#93c5fd;
+      --warn-box-bg:#fffbeb; --warn-box-bd:#fcd34d;
+      --td-color:#475569; --td-bd:#f1f5f9;
+      --row-hover:#f1f5f9; --top-pick-bg:#fffbeb; --top-pick-h:#fef9c3; --top-divider:#fde68a;
+      --badge-top-bg:#fef9c3; --badge-mall-bg:#dbeafe; --badge-mall-c:#1d4ed8;
+      --badge-disc-bg:#fee2e2; --badge-ship-bg:#dcfce7;
+      --log-hover:#f8fafc; --log-msg-c:#475569; --log-time-c:#94a3b8;
+      --empty-c:#94a3b8; --ver-c:#94a3b8; --stock-ok-c:#94a3b8; --cfg-row-bd:#e2e8f0;
+      --btn-dis-bg:#e2e8f0; --btn-dis-c:#94a3b8; --btn-ghost-h-bd:#94a3b8;
+      --btn-danger-bd:#fca5a5; --btn-danger-h:#fef2f2;
+      --ctrl-pause-bd:#bfdbfe; --ctrl-pause-h:#eff6ff;
+      --ctrl-stop-bd:#fca5a5;  --ctrl-stop-h:#fef2f2;
+      --btn-ghost-brd-hov:#94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .layout { display: flex; height: 100vh; }
+
+    /* ── Sidebar ─────────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .brand {
+      padding: 16px 14px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .brand-logo {
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .brand-name { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -.3px; }
+    .brand-sub  { font-size: 10px; color: var(--muted); }
+
+    .hunt-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .hunt-dot.running { background: var(--ok); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+    .nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 9px 14px;
+      background: none; border: none; border-left: 3px solid transparent;
+      color: var(--muted); font-size: 13px; cursor: pointer; text-align: left;
+      transition: color .15s, background .15s, border-color .15s;
+    }
+    .nav-item:hover  { color: var(--text); background: var(--bg3); }
+    .nav-item.active { color: var(--accent); background: var(--bg3); border-left-color: var(--accent); }
+    .nav-icon  { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+    .nav-label { font-weight: 500; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--bg); color: var(--muted);
+      font-size: 10px; border-radius: 10px; padding: 1px 6px;
+      border: 1px solid var(--border);
+    }
+    .nav-about { border-top: 1px solid var(--border); margin-top: auto; }
+
+    .sidebar-footer { padding: 8px 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .footer-ver { font-size: 10px; color: var(--ver-c); }
+    .theme-switcher { display: flex; gap: 2px; }
+    .theme-btn { width: 22px; height: 22px; border-radius: 4px; border: 1px solid transparent; background: transparent; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; color: var(--muted); transition: background .15s, border-color .15s, color .15s; }
+    .theme-btn:hover  { background: var(--bg3); color: var(--text); }
+    .theme-btn.active { background: var(--bg3); border-color: var(--border); color: var(--accent); }
+
+    /* ── Content ─────────────────────────────────────────────── */
+    .content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+    .page { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+    .page.active { display: flex; }
+
+    .page-header {
+      padding: 14px 20px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+      flex-shrink: 0; background: var(--bg2);
+    }
+    .page-header h2 { font-size: 15px; font-weight: 700; }
+    .page-header .page-sub { font-size: 11px; color: var(--muted); flex: 1; }
+    .page-body { flex: 1; overflow-y: auto; padding: 20px; }
+    .page-body.no-pad { padding: 0; }
+    .page-body.cfg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-content: start; }
+    .page-body.cfg-grid .cfg-section { margin-bottom: 0; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-size: 12px; padding: 8px 18px; border-radius: 20px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; white-space: nowrap; z-index: 999; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn { padding: 6px 13px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-h); }
+    .btn-primary:disabled { background: var(--btn-dis-bg); color: var(--btn-dis-c); cursor: not-allowed; }
+    .btn-ghost   { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--btn-ghost-h-bd); }
+    .btn-danger  { background: transparent; color: var(--err); border: 1px solid var(--btn-danger-bd); }
+    .btn-danger:hover { background: var(--btn-danger-h); }
+    .btn-sm { padding: 3px 9px; font-size: 11px; }
+
+    /* ── Hunt page ───────────────────────────────────────────── */
+    .hunt-form { display: flex; gap: 8px; margin-bottom: 14px; }
+    #d-keyword {
+      flex: 1; padding: 8px 12px; border-radius: 7px;
+      border: 1px solid var(--border); background: var(--bg3);
+      color: var(--text); font-size: 13px; outline: none;
+      transition: border-color .15s;
+    }
+    #d-keyword:focus { border-color: var(--accent); }
+    #d-keyword::placeholder { color: var(--muted); }
+
+    /* Interrupted banner */
+    .interrupted-strip {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--sf-warn-bg);
+      border: 1px solid var(--sf-warn-bd);
+      border-radius: 8px;
+      color: var(--warn);
+      font-size: 12px;
+      margin-bottom: 14px;
+    }
+    .interrupted-strip.visible { display: flex; }
+    .interrupted-strip span { flex: 1; }
+    .interrupted-actions { display: flex; gap: 6px; }
+
+    .progress-card {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; display: none;
+    }
+    .progress-card.visible { display: block; }
+    .progress-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
+    .progress-fill  { height: 100%; background: var(--accent); border-radius: 3px; transition: width .4s ease; }
+    .progress-meta  { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    #d-progressText { font-size: 12px; color: var(--muted); flex: 1; }
+    .hunt-controls  { display: flex; gap: 6px; }
+    .btn-pause { color: var(--info); border: 1px solid var(--ctrl-pause-bd); background: transparent; border-radius: 5px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .btn-pause:hover { background: var(--ctrl-pause-h); }
+    .btn-stop  { color: var(--err);  border: 1px solid var(--ctrl-stop-bd); background: transparent; border-radius: 5px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .btn-stop:hover { background: var(--ctrl-stop-h); }
+
+    .cooldown-strip {
+      padding: 8px 12px; background: var(--sf-cool-bg); border: 1px solid var(--sf-cool-bd);
+      border-radius: 7px; color: var(--warn); font-size: 12px; margin-bottom: 12px; display: none;
+    }
+    .cooldown-strip.visible { display: block; }
+
+    .status-strip {
+      padding: 8px 12px; border-radius: 7px; font-size: 12px; margin-bottom: 12px; display: none;
+    }
+    .status-strip.visible { display: block; }
+    .status-strip.ok   { background: var(--sf-ok-bg);   border: 1px solid var(--sf-ok-bd);   color: var(--ok); }
+    .status-strip.err  { background: var(--sf-err-bg);  border: 1px solid var(--sf-err-bd);  color: var(--err); }
+    .status-strip.info { background: var(--sf-info-bg); border: 1px solid var(--sf-info-bd); color: var(--info); }
+
+    .warn-box {
+      padding: 12px 14px; background: var(--warn-box-bg); border: 1px solid var(--warn-box-bd);
+      border-radius: 7px; color: var(--warn); font-size: 12px; display: none;
+    }
+    .warn-box.visible { display: block; }
+
+    /* ── Logs page ───────────────────────────────────────────── */
+    .log-list { flex: 1; overflow-y: auto; padding: 6px 0; font-family: 'SF Mono', 'Fira Code', monospace; }
+    .log-entry { display: flex; gap: 14px; padding: 3px 20px; border-left: 2px solid transparent; }
+    .log-entry:hover { background: var(--log-hover); }
+    .log-entry.ok   { border-left-color: var(--ok); }
+    .log-entry.err  { border-left-color: var(--err); }
+    .log-entry.info { border-left-color: var(--info); }
+    .log-time { font-size: 11px; color: var(--log-time-c); white-space: nowrap; min-width: 68px; padding-top: 1px; }
+    .log-msg  { flex: 1; font-size: 12px; color: var(--log-msg-c); line-height: 1.5; }
+    .log-msg.ok   { color: var(--ok); }
+    .log-msg.err  { color: var(--err); }
+    .log-msg.info { color: var(--info); }
+    .logs-footer {
+      padding: 7px 20px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px; font-size: 11px;
+      color: var(--muted); flex-shrink: 0; background: var(--bg2);
+    }
+    .logs-footer label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    #d-logCount { margin-left: auto; }
+
+    /* ── Results page ────────────────────────────────────────── */
+    /* Hunt tabs */
+    .hunt-tabs {
+      display: none;
+      overflow-x: auto;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+    }
+    .hunt-tabs-inner {
+      display: flex;
+    }
+    .hunt-tab {
+      padding: 9px 16px 7px;
+      border: none;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      text-align: left;
+      transition: color .15s, border-color .15s;
+      flex-shrink: 0;
+    }
+    .hunt-tab:hover { color: var(--text); }
+    .hunt-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-keyword { font-weight: 600; font-size: 12px; }
+    .tab-meta { font-size: 10px; opacity: .65; }
+
+    .table-toolbar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; flex-shrink: 0; border-bottom: 1px solid var(--border);
+    }
+    .toolbar-count { font-size: 12px; color: var(--muted); flex: 1; }
+
+    .results-table-wrap { overflow: auto; flex: 1; }
+
+    /* Quick Filter bar */
+    .qf-bar { display: none; align-items: center; gap: 10px; padding: 9px 20px; flex-shrink: 0; background: var(--bg3); border-bottom: 1px solid var(--border); }
+    .qf-bar.open { display: flex; }
+    .qf-label { font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+    .qf-select { padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: 12px; cursor: pointer; outline: none; max-width: 170px; }
+    .qf-select:focus { border-color: var(--accent); }
+    .qf-input { padding: 5px 9px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: 12px; outline: none; }
+    .qf-input:focus { border-color: var(--accent); }
+    .qf-input::placeholder { color: var(--muted); }
+    .qf-text  { flex: 1; min-width: 120px; max-width: 220px; }
+    .qf-num   { width: 70px; }
+    .qf-spacer { flex: 1; }
+    .btn-filter { position: relative; }
+    .btn-filter .qf-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: none; }
+    .btn-filter.has-filter .qf-dot { display: block; }
+
+    table { width: 100%; border-collapse: collapse; min-width: 820px; }
+    thead { position: sticky; top: 0; z-index: 2; background: var(--bg2); }
+    thead th {
+      padding: 8px 10px; font-size: 10px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: .4px;
+      border-bottom: 1px solid var(--border); text-align: left;
+      white-space: nowrap; user-select: none;
+    }
+    thead th.sortable { cursor: pointer; }
+    thead th.sortable:hover { color: var(--text); }
+    thead th.sort-active { color: var(--accent); }
+
+    tbody td {
+      padding: 7px 10px; border-bottom: 1px solid var(--td-bd);
+      color: var(--td-color); vertical-align: middle; font-size: 12px;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--row-hover); }
+    tbody tr.top-pick td { background: var(--top-pick-bg); }
+    tbody tr.top-pick:hover td { background: var(--top-pick-h); }
+    tbody tr.top-divider td { border-bottom: 2px solid var(--top-divider); }
+
+    .col-rank  { width: 44px; text-align: center; }
+    .col-name  { min-width: 200px; max-width: 300px; }
+    .col-brand { max-width: 100px; }
+    .col-price { white-space: nowrap; }
+    .col-num   { width: 52px; text-align: center; }
+    .col-score { font-weight: 700; color: var(--accent); text-align: center; width: 52px; }
+    .col-link  { width: 32px; text-align: center; }
+    .col-seller { max-width: 110px; }
+    .seller-link { color: var(--info); background: none; border: none; cursor: pointer; font-size: 12px; text-align: left; padding: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 105px; display: block; transition: color .15s; }
+    .seller-link:hover { text-decoration: underline; }
+    .col-del   { width: 28px; text-align: center; }
+
+    /* Seller modal */
+    .seller-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.65); display: none; align-items: center; justify-content: center; }
+    .seller-overlay.open { display: flex; }
+    .seller-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 28px 32px; width: 460px; max-height: 80vh; overflow-y: auto; }
+    .seller-card-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+    .seller-avatar { width: 44px; height: 44px; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .seller-card-name { font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+    .seller-card-sub  { font-size: 11px; color: var(--muted); }
+    .seller-stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .seller-stat { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+    .seller-stat-val { font-size: 16px; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
+    .seller-stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+    .seller-products-heading { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 10px; }
+    .seller-product-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .seller-product-row:last-child { border-bottom: none; }
+    .seller-product-name { flex: 1; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .seller-product-name a { color: var(--text); text-decoration: none; }
+    .seller-product-name a:hover { color: var(--accent); text-decoration: underline; }
+    .seller-product-score { font-weight: 700; color: var(--accent); font-size: 12px; min-width: 28px; text-align: right; }
+    .seller-product-price { color: var(--muted); white-space: nowrap; }
+    .seller-close { margin-top: 20px; padding: 7px 24px; border-radius: 7px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; display: block; margin-left: auto; transition: color .15s, border-color .15s; }
+    .seller-close:hover { color: var(--text); border-color: var(--btn-ghost-h-bd); }
+    .del-btn   { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; opacity: .4; transition: opacity .15s, color .15s; padding: 2px 4px; border-radius: 3px; }
+    .del-btn:hover { color: var(--err); opacity: 1; }
+
+    .product-link {
+      color: var(--text); text-decoration: none;
+      display: block; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; max-width: 290px;
+    }
+    .product-link:hover { color: var(--accent); text-decoration: underline; }
+
+    .ext-link {
+      color: var(--muted); text-decoration: none; font-size: 14px;
+      opacity: .6; transition: opacity .15s, color .15s;
+    }
+    .ext-link:hover { color: var(--accent); opacity: 1; }
+
+    .badge-top  { display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; background: var(--badge-top-bg);  color: var(--warn);          border-radius: 3px; padding: 2px 5px; width: 36px; }
+    .badge-mall { display: inline-block; font-size: 9px; font-weight: 700; background: var(--badge-mall-bg); color: var(--badge-mall-c); border-radius: 3px; padding: 1px 4px; margin-left: 4px; vertical-align: middle; }
+    .badge-disc { display: inline-block; font-size: 9px; font-weight: 700; background: var(--badge-disc-bg); color: var(--err);          border-radius: 3px; padding: 1px 4px; margin-left: 4px; }
+    .badge-ship { display: inline-block; font-size: 9px; font-weight: 700; background: var(--badge-ship-bg); color: var(--ok);           border-radius: 3px; padding: 1px 4px; margin-left: 4px; }
+
+    .stock-low { color: var(--warn); }
+    .stock-out { color: var(--err); }
+    .stock-ok  { color: var(--stock-ok-c); }
+
+    .muted { color: var(--muted); }
+
+    .empty-pane { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--empty-c); font-size: 13px; text-align: center; }
+
+    /* ── History page ────────────────────────────────────────── */
+    .history-entry { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .history-entry:last-child { border-bottom: none; }
+    .history-icon { font-size: 18px; width: 30px; text-align: center; flex-shrink: 0; }
+    .history-info { flex: 1; min-width: 0; }
+    .history-keyword { font-weight: 600; color: var(--text); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-meta { font-size: 11px; color: var(--muted); }
+    .history-score { color: var(--accent); font-weight: 700; margin-left: 8px; }
+    .history-actions { display: flex; gap: 6px; }
+
+    /* ── Settings page ───────────────────────────────────────── */
+    .cfg-section {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 9px; padding: 14px 18px; margin-bottom: 16px;
+    }
+    .cfg-heading {
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .5px;
+      margin-bottom: 14px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cfg-row {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 6px 0; border-bottom: 1px solid var(--cfg-row-bd);
+    }
+    .cfg-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .cfg-label {
+      width: 130px; flex-shrink: 0; font-size: 12px;
+      color: var(--text); padding-top: 6px;
+    }
+    .cfg-control { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .cfg-input {
+      padding: 5px 9px; border-radius: 5px; border: 1px solid var(--border);
+      background: var(--bg2); color: var(--text); font-size: 12px; outline: none;
+      transition: border-color .15s;
+    }
+    .cfg-input:focus { border-color: var(--accent); }
+    .cfg-num  { width: 90px; }
+    .cfg-select { width: 200px; cursor: pointer; }
+    .cfg-range { flex-direction: row; align-items: center; gap: 8px; }
+    .cfg-sep { color: var(--muted); }
+    .cfg-hint { font-size: 11px; color: var(--muted); }
+    .cfg-radios { display: flex; gap: 14px; padding-top: 5px; flex-wrap: wrap; }
+    .cfg-radio { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text); cursor: pointer; }
+    .cfg-radio input { accent-color: var(--accent); }
+    .cfg-checkbox { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); cursor: pointer; padding-top: 5px; }
+    .cfg-checkbox input { accent-color: var(--accent); width: 14px; height: 14px; }
+/* ── About modal ─────────────────────────────────────────── */
+    .about-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.7);
+      display: none; align-items: center; justify-content: center;
+    }
+    .about-overlay.open { display: flex; }
+    .about-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 480px;
+      overflow: hidden;
+      color: var(--text);
+    }
+    .about-header {
+      padding: 28px 24px 24px;
+      text-align: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent-h));
+      color: #fff;
+    }
+    .about-logo {
+      width: 72px; height: 72px; border-radius: 18px;
+      background: rgba(255,255,255,.18); color: #fff;
+      font-weight: 800; font-size: 32px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+    }
+    .about-app-name { font-size: 24px; font-weight: 700; margin-bottom: 4px; color: #fff; }
+    .about-app-sub  { font-size: 14px; opacity: .9; }
+    .about-version-badge {
+      display: inline-block; margin-top: 14px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.28);
+      border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff;
+    }
+    .about-desc {
+      padding: 18px 24px 0;
+      text-align: center; line-height: 1.65;
+      color: var(--muted); font-size: 13px;
+    }
+    /* Info table */
+    .about-section { padding: 22px 24px 0; }
+    .about-section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      color: var(--text); text-transform: uppercase; margin-bottom: 12px;
+    }
+    .about-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .about-table td { padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .about-table tr:last-child td { border-bottom: none; }
+    .about-table .at-label { color: var(--muted); }
+    .about-table .at-val   { text-align: right; font-weight: 600; color: var(--text); }
+    .about-table .at-val a { color: var(--accent); text-decoration: none; }
+    .about-table .at-val a:hover { text-decoration: underline; }
+    /* Footer */
+    .about-footer { padding: 22px 24px; }
+    .about-copyright { text-align: center; font-size: 12px; color: var(--muted); line-height: 1.8; margin-bottom: 18px; }
+    .about-copyright strong { color: var(--text); }
+    .about-actions { display: flex; gap: 10px; }
+    .about-btn-visit {
+      flex: 1; height: 40px; border: none; border-radius: 10px;
+      background: var(--accent); color: #fff;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background .15s;
+    }
+    .about-btn-visit:hover { background: var(--accent-h); }
+    .about-close {
+      width: 90px; height: 40px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--bg2);
+      color: var(--text); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    .about-close:hover { border-color: var(--btn-ghost-brd-hov); background: var(--bg3); }
+
+    /* ── Confirm dialog ──────────────────────────────────────── */
+    .confirm-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.65);
+      display: none; align-items: center; justify-content: center;
+    }
+    .confirm-overlay.open { display: flex; }
+    .confirm-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px 28px; width: 280px; text-align: center;
+    }
+    .confirm-msg { font-size: 13px; color: var(--text); margin-bottom: 20px; line-height: 1.5; white-space: pre-line; }
+    .confirm-actions { display: flex; gap: 8px; justify-content: center; }
+    .confirm-ok {
+      padding: 7px 20px; border-radius: 6px; border: none;
+      background: var(--err); color: #fff; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .confirm-ok:hover { opacity: .85; }
+    .confirm-cancel {
+      padding: 7px 20px; border-radius: 6px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--muted); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: color .15s, border-color .15s;
+    }
+    .confirm-cancel:hover { color: var(--text); border-color: var(--btn-ghost-brd-hov); }
+
+    /* ── Custom scrollbars ───────────────────────────────────── */
+    ::-webkit-scrollbar             { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track       { background: transparent; }
+    ::-webkit-scrollbar-thumb       { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+    ::-webkit-scrollbar-corner      { background: transparent; }
+
+    /* ── Context menu ────────────────────────────────────────── */
+    .ctx-menu {
+      position: fixed; z-index: 9999;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 4px 0; min-width: 175px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+      opacity: 0; transform: scale(.95); pointer-events: none;
+      transition: opacity .1s, transform .1s;
+      transform-origin: top left;
+    }
+    .ctx-menu.open { opacity: 1; transform: scale(1); pointer-events: auto; }
+    .ctx-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 14px; font-size: 12px; color: var(--text);
+      cursor: pointer; white-space: nowrap;
+      transition: background .1s;
+    }
+    .ctx-item:hover { background: var(--row-hover); }
+    .ctx-icon { font-size: 13px; width: 16px; text-align: center; color: var(--muted); flex-shrink: 0; }
+    .ctx-item:hover .ctx-icon { color: var(--accent); }
+    .ctx-item.danger { color: var(--err); }
+    .ctx-item.danger .ctx-icon { color: var(--err); }
+    .ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">dH</div>
+      <div>
+        <div class="brand-name">dHunt</div>
+        <div class="brand-sub">Daraz Product Hunter</div>
+      </div>
+      <div class="hunt-dot" id="huntDot"></div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" data-page="hunt">
+        <span class="nav-icon">🎯</span>
+        <span class="nav-label">Hunt</span>
+      </button>
+      <button class="nav-item" data-page="logs">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">Logs</span>
+        <span class="nav-badge" id="logsBadge">0</span>
+      </button>
+      <button class="nav-item" data-page="results">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Results</span>
+        <span class="nav-badge" id="resultsBadge">0</span>
+      </button>
+      <button class="nav-item" data-page="history">
+        <span class="nav-icon">🕐</span>
+        <span class="nav-label">History</span>
+        <span class="nav-badge" id="histBadge">0</span>
+      </button>
+      <button class="nav-item" data-page="settings">
+        <span class="nav-icon">⚙</span>
+        <span class="nav-label">Settings</span>
+      </button>
+      <button class="nav-item nav-about" id="d-aboutBtn">
+        <span class="nav-icon">ℹ</span>
+        <span class="nav-label">About</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="footer-ver">v0.2.0 · MV3</span>
+      <div class="theme-switcher">
+        <button class="theme-btn" data-theme-val="light"  title="Light mode">☀</button>
+        <button class="theme-btn" data-theme-val="dark"   title="Dark mode">●</button>
+        <button class="theme-btn" data-theme-val="system" title="System mode">◑</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Content ───────────────────────────────────────────────── -->
+  <main class="content">
+
+    <!-- HUNT PAGE -->
+    <div class="page active" id="page-hunt">
+      <div class="page-header">
+        <h2>🎯 Hunt</h2>
+        <span class="page-sub">Search daraz.pk autonomously</span>
+      </div>
+      <div class="page-body">
+
+        <!-- Interrupted state banner -->
+        <div class="interrupted-strip" id="d-interrupted">
+          <span>⚠ Previous hunt was interrupted. Resume where you left off or start fresh.</span>
+          <div class="interrupted-actions">
+            <button class="btn btn-primary btn-sm" id="d-resumeBtn">Resume</button>
+            <button class="btn btn-ghost btn-sm"   id="d-restartBtn">Restart</button>
+          </div>
+        </div>
+
+        <div class="cooldown-strip" id="d-cooldown">
+          ⏱ Cooldown active — <strong id="d-cooldownTimer">0s</strong> remaining before next hunt
+        </div>
+
+        <div class="hunt-form">
+          <input type="text" id="d-keyword" placeholder="Enter product keyword (e.g. phone case, seed cycle…)" autocomplete="off">
+          <button class="btn btn-primary" id="d-startBtn">Start Hunt</button>
+        </div>
+
+        <div class="progress-card" id="d-progressCard">
+          <div class="progress-track">
+            <div class="progress-fill" id="d-progressFill" style="width:0%"></div>
+          </div>
+          <div class="progress-meta">
+            <span id="d-progressText">Initialising…</span>
+            <div class="hunt-controls">
+              <button class="btn-pause" id="d-pauseBtn">Pause</button>
+              <button class="btn-stop"  id="d-stopBtn">Stop</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-strip" id="d-status"></div>
+        <div class="warn-box" id="d-warn">
+          ⚠ 0 products extracted — Daraz may have changed its layout. Check the Logs page for details.
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LOGS PAGE -->
+    <div class="page" id="page-logs">
+      <div class="page-header">
+        <h2>📋 Logs</h2>
+        <span class="page-sub">Real-time hunt activity</span>
+        <button class="btn btn-ghost btn-sm btn-danger" id="d-clearBtn">Clear</button>
+      </div>
+      <div class="log-list" id="d-logList">
+        <div class="empty-pane">No logs yet — run a hunt.</div>
+      </div>
+      <div class="logs-footer">
+        <label>
+          <input type="checkbox" id="d-autoScroll" checked>
+          Auto-scroll
+        </label>
+        <span id="d-logCount">0 entries</span>
+      </div>
+    </div>
+
+    <!-- RESULTS PAGE -->
+    <div class="page" id="page-results">
+      <div class="page-header">
+        <h2>📊 Results</h2>
+        <span class="page-sub" id="d-resultsSubtitle">No hunt results yet</span>
+        <button class="btn btn-ghost btn-sm btn-filter" id="d-filterToggle" style="display:none">🔍 Filter<span class="qf-dot"></span></button>
+        <button class="btn btn-ghost btn-sm" id="d-csvBtn" style="display:none" data-tooltip="Download results as CSV file">📥 Export CSV</button>
+        <button class="btn btn-ghost btn-sm btn-danger" id="d-clearResultsBtn" style="display:none" data-tooltip="Delete all current results">Clear</button>
+      </div>
+      <!-- Per-hunt tabs -->
+      <div class="hunt-tabs" id="d-huntTabs">
+        <div class="hunt-tabs-inner" id="d-huntTabsInner"></div>
+      </div>
+      <!-- Quick Filter bar -->
+      <div class="qf-bar" id="d-qfBar">
+        <span class="qf-label">Tab:</span>
+        <select class="qf-select" id="d-qfTab"></select>
+        <span class="qf-label">Search:</span>
+        <input class="qf-input qf-text" id="d-qfText" type="text" placeholder="title, brand, seller…">
+        <span class="qf-label">Min score:</span>
+        <input class="qf-input qf-num"  id="d-qfScore" type="number" min="0" max="100" placeholder="0">
+        <span class="qf-spacer"></span>
+        <button class="btn btn-ghost btn-sm" id="d-qfClear">Clear</button>
+      </div>
+      <div class="table-toolbar" id="d-tableToolbar" style="display:none">
+        <span class="toolbar-count" id="d-toolbarCount"></span>
+      </div>
+      <div class="results-table-wrap" id="d-resultsWrap">
+        <div class="empty-pane" id="d-resultsEmpty">Run a hunt to see results here.</div>
+        <table id="d-resultsTable" style="display:none">
+          <thead>
+            <tr>
+              <th class="col-rank">#</th>
+              <th class="col-name sortable sort-active" data-col="demandScore">Product ▼</th>
+              <th class="col-brand sortable" data-col="brand">Brand</th>
+              <th class="col-seller sortable" data-col="seller">Seller</th>
+              <th class="col-price sortable" data-col="currentPrice">Price</th>
+              <th class="sortable" data-col="rating">★</th>
+              <th class="sortable" data-col="reviewCount">Reviews</th>
+              <th class="sortable" data-col="stockStatus">Stock</th>
+              <th class="col-num sortable" data-col="imagesCount">Imgs</th>
+              <th class="col-score sortable" data-col="demandScore">Score</th>
+              <th class="col-link">↗</th>
+              <th class="col-del"></th>
+            </tr>
+          </thead>
+          <tbody id="d-resultsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div class="page" id="page-history">
+      <div class="page-header">
+        <h2>🕐 History</h2>
+        <span class="page-sub">Past hunt sessions</span>
+      </div>
+      <div class="page-body">
+        <div class="empty-pane" id="d-histEmpty" style="height:200px">No hunt history yet.</div>
+        <div id="d-histList"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <h2>⚙ Settings</h2>
+        <span class="page-sub">Applied to all future hunts</span>
+        <button class="btn btn-ghost btn-sm" id="d-testNotif" title="Send a test notification">🔔 Test Notification</button>
+      </div>
+      <div class="page-body cfg-grid">
+
+        <div class="cfg-section">
+          <div class="cfg-heading">Hunt Limits</div>
+          <div class="cfg-row">
+            <label class="cfg-label" for="cfg-maxPages">Max Pages</label>
+            <div class="cfg-control">
+              <input class="cfg-input cfg-num" type="number" id="cfg-maxPages" min="1" max="20" value="5">
+              <span class="cfg-hint">pages of search results to scan (1 – 20)</span>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <label class="cfg-label" for="cfg-maxProducts">Max Products</label>
+            <div class="cfg-control">
+              <input class="cfg-input cfg-num" type="number" id="cfg-maxProducts" min="5" max="200" value="80">
+              <span class="cfg-hint">products to enrich per hunt (5 – 200)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="cfg-section">
+          <div class="cfg-heading">Search</div>
+          <div class="cfg-row">
+            <label class="cfg-label" for="cfg-sortBy">Sort By</label>
+            <div class="cfg-control">
+              <select class="cfg-input cfg-select" id="cfg-sortBy">
+                <option value="popularity">Popularity</option>
+                <option value="priceasc">Price: Low → High</option>
+                <option value="pricedesc">Price: High → Low</option>
+                <option value="ratings">Rating</option>
+                <option value="latest">Newest</option>
+              </select>
+              <span class="cfg-hint">controls the Daraz search sort order</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="cfg-section">
+          <div class="cfg-heading">Filters — products not matching are skipped</div>
+          <div class="cfg-row">
+            <label class="cfg-label">Price Range (PKR)</label>
+            <div class="cfg-control cfg-range">
+              <input class="cfg-input cfg-num" type="number" id="cfg-priceMin" placeholder="Min" min="0">
+              <span class="cfg-sep">—</span>
+              <input class="cfg-input cfg-num" type="number" id="cfg-priceMax" placeholder="Max" min="0">
+              <span class="cfg-hint">leave blank to skip price filter</span>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <label class="cfg-label" for="cfg-minRating">Min Rating</label>
+            <div class="cfg-control">
+              <input class="cfg-input cfg-num" type="number" id="cfg-minRating" min="0" max="5" step="0.5" value="0">
+              <span class="cfg-hint">★ (0 = any rating)</span>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <label class="cfg-label" for="cfg-minReviews">Min Reviews</label>
+            <div class="cfg-control">
+              <input class="cfg-input cfg-num" type="number" id="cfg-minReviews" min="0" value="0">
+              <span class="cfg-hint">0 = no minimum</span>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <label class="cfg-label" for="cfg-minImages">Min Images</label>
+            <div class="cfg-control">
+              <input class="cfg-input cfg-num" type="number" id="cfg-minImages" min="0" value="0">
+              <span class="cfg-hint">0 = no minimum</span>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <label class="cfg-label">Brand</label>
+            <div class="cfg-control">
+              <div class="cfg-radios">
+                <label class="cfg-radio"><input type="radio" name="brandFilter" value="any" checked> Any</label>
+                <label class="cfg-radio"><input type="radio" name="brandFilter" value="branded"> Branded only</label>
+                <label class="cfg-radio"><input type="radio" name="brandFilter" value="nobrand"> No brand</label>
+              </div>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <label class="cfg-label" for="cfg-freeShipping">Free Shipping</label>
+            <div class="cfg-control">
+              <label class="cfg-checkbox">
+                <input type="checkbox" id="cfg-freeShipping">
+                <span>Only show free-shipping products</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="cfg-section">
+          <div class="cfg-heading">Keyword Filters — applied to product title</div>
+          <div class="cfg-row">
+            <label class="cfg-label" for="cfg-keywordInclude">Must Include</label>
+            <div class="cfg-control">
+              <input class="cfg-input" type="text" id="cfg-keywordInclude" placeholder="e.g. leather, case">
+              <span class="cfg-hint">title must contain ALL of these (comma separated)</span>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <label class="cfg-label" for="cfg-keywordExclude">Must Exclude</label>
+            <div class="cfg-control">
+              <input class="cfg-input" type="text" id="cfg-keywordExclude" placeholder="e.g. used, fake, replica">
+              <span class="cfg-hint">title must not contain any of these</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── About modal ───────────────────────────────────────────────── -->
+<div class="about-overlay" id="d-aboutOverlay">
+  <div class="about-card">
+
+    <!-- Header -->
+    <div class="about-header">
+      <div class="about-logo">d</div>
+      <div class="about-app-name">dHunt</div>
+      <div class="about-app-sub">Daraz Product Hunter</div>
+      <div class="about-version-badge">Version 0.2.0</div>
+    </div>
+
+    <!-- Description -->
+    <div class="about-desc">
+      Discover winning products on Daraz with advanced filters, intelligent insights,
+      and powerful hunting tools designed for sellers and researchers.
+    </div>
+
+    <!-- Extension Information -->
+    <div class="about-section">
+      <div class="about-section-label">Extension Information</div>
+      <table class="about-table">
+        <tr><td class="at-label">Developer</td><td class="at-val">Usman Saif</td></tr>
+        <tr><td class="at-label">Email</td><td class="at-val"><a href="mailto:hello@usmansaif.com">hello@usmansaif.com</a></td></tr>
+        <tr><td class="at-label">Website</td><td class="at-val"><a href="https://usmansaif.com" target="_blank" rel="noreferrer">usmansaif.com</a></td></tr>
+        <tr><td class="at-label">Support</td><td class="at-val"><a href="mailto:hello@usmansaif.com">Contact Developer</a></td></tr>
+        <tr><td class="at-label">License</td><td class="at-val">Proprietary</td></tr>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="about-footer">
+      <div class="about-copyright">
+        Built with ❤️ by <strong>Usman Saif</strong><br>
+        © 2026 All Rights Reserved.
+      </div>
+      <div class="about-actions">
+        <button class="about-btn-visit" id="d-aboutVisit">Visit Website</button>
+        <button class="about-close" id="d-aboutClose">Close</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Confirm dialog ─────────────────────────────────────────────── -->
+<div class="confirm-overlay" id="d-confirmOverlay">
+  <div class="confirm-card">
+    <div class="confirm-msg" id="d-confirmMsg"></div>
+    <div class="confirm-actions">
+      <button class="confirm-ok"     id="d-confirmOk">Delete</button>
+      <button class="confirm-cancel" id="d-confirmCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="d-toast"></div>
+
+<div class="seller-overlay" id="d-sellerOverlay">
+  <div class="seller-card" id="d-sellerCard">
+    <div class="seller-card-header">
+      <div class="seller-avatar" id="d-sellerAvatar">S</div>
+      <div>
+        <div class="seller-card-name" id="d-sellerName"></div>
+        <div class="seller-card-sub"  id="d-sellerSub"></div>
+      </div>
+    </div>
+    <div class="seller-stats-grid" id="d-sellerStatsGrid"></div>
+    <div class="seller-products-heading">Products in this hunt</div>
+    <div id="d-sellerProducts"></div>
+    <button class="seller-close" id="d-sellerClose">Close</button>
+  </div>
+</div>
+
+<div id="ctxMenu" class="ctx-menu"></div>
+
+<script src="logs.js"></script>
+</body>
+</html>

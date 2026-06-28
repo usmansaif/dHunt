@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>dHunt</title>
+  <script src="theme-init.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Dark theme (default) */
+      --bg:              #0f1117;
+      --bg2:             #161c27;
+      --border:          #1e2535;
+      --text:            #e2e8f0;
+      --muted:           #64748b;
+      --accent:          #f97316;
+      --ok:              #34d399;
+      --err:             #f87171;
+      --info:            #60a5fa;
+      --warn:            #facc15;
+
+      --accent-hov:        #ea6c0a;
+      --btn-disabled-bg:   #2d3748;
+      --btn-disabled-c:    #6b7280;
+      --kw-border:         #2d3748;
+      --kw-placeholder:    #4a5568;
+      --cooldown-bg:       #1a1500;
+      --interrupted-bg:    #1a1200;
+      --interrupted-brd:   #3a2800;
+      --btn-ghost-brd-hov: #3a4a60;
+      --ok-bg:             #0a1f0a;
+      --ok-border-dim:     #2a4a2a;
+      --btn-pause-brd:     #2a3f5f;
+      --btn-pause-hov:     #0f1f35;
+      --btn-stop-brd:      #3f2020;
+      --btn-stop-hov:      #1f0f0f;
+    }
+
+    [data-theme="light"] {
+      --bg:              #f8fafc;
+      --bg2:             #f1f5f9;
+      --border:          #cbd5e1;
+      --text:            #0f172a;
+      --muted:           #64748b;
+      --ok:              #059669;
+      --err:             #dc2626;
+      --info:            #2563eb;
+      --warn:            #b45309;
+
+      --btn-disabled-bg:   #e2e8f0;
+      --btn-disabled-c:    #9ca3af;
+      --kw-border:         #cbd5e1;
+      --kw-placeholder:    #9ca3af;
+      --cooldown-bg:       #fffbeb;
+      --interrupted-bg:    #fffbeb;
+      --interrupted-brd:   #fcd34d;
+      --btn-ghost-brd-hov: #94a3b8;
+      --ok-bg:             #f0fdf4;
+      --ok-border-dim:     #86efac;
+      --btn-pause-brd:     #93c5fd;
+      --btn-pause-hov:     #eff6ff;
+      --btn-stop-brd:      #fca5a5;
+      --btn-stop-hov:      #fef2f2;
+    }
+
+    body {
+      width: 360px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+      position: relative;
+    }
+
+    /* ── Header ───────────────────────────── */
+    .header {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header h1 { font-size: 16px; font-weight: 700; color: var(--accent); flex: 1; }
+    .btn-dash {
+      padding: 4px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+      white-space: nowrap;
+    }
+    .btn-dash:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Theme toggle (popup) ─────────────── */
+    .theme-toggle {
+      display: inline-flex;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px;
+      gap: 1px;
+    }
+    .theme-toggle button {
+      padding: 3px 7px;
+      border-radius: 4px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .15s;
+      line-height: 1;
+    }
+    .theme-toggle button:hover { color: var(--text); }
+    .theme-toggle button.active { background: var(--bg); color: var(--accent); }
+
+    /* ── Interrupted banner ───────────────── */
+    .interrupted-row {
+      padding: 9px 14px;
+      background: var(--interrupted-bg);
+      border-bottom: 1px solid var(--interrupted-brd);
+      display: none;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .interrupted-row.visible { display: flex; }
+    .interrupted-label { font-size: 11px; color: var(--warn); }
+    .interrupted-btns  { display: flex; gap: 6px; }
+    .btn-resume, .btn-restart {
+      flex: 1;
+      padding: 5px 0;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      border: none;
+    }
+    .btn-resume  { background: var(--accent); color: #fff; }
+    .btn-resume:hover  { background: var(--accent-hov); }
+    .btn-restart { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-restart:hover { color: var(--text); border-color: var(--btn-ghost-brd-hov); }
+
+    /* ── Search row ───────────────────────── */
+    .search-row {
+      display: flex;
+      gap: 8px;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    #keyword {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--kw-border);
+      background: var(--bg2);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    #keyword:focus { border-color: var(--accent); }
+    #keyword::placeholder { color: var(--kw-placeholder); }
+    #keyword:disabled { opacity: .5; }
+
+    #startBtn {
+      padding: 7px 13px;
+      border-radius: 6px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+    #startBtn:hover    { background: var(--accent-hov); }
+    #startBtn:disabled { background: var(--btn-disabled-bg); color: var(--btn-disabled-c); cursor: not-allowed; }
+
+    /* ── Cooldown ─────────────────────────── */
+    .cooldown-row {
+      padding: 7px 14px;
+      font-size: 11px;
+      color: var(--warn);
+      border-bottom: 1px solid var(--border);
+      background: var(--cooldown-bg);
+      display: none;
+    }
+    .cooldown-row.visible { display: block; }
+
+    /* ── Progress ─────────────────────────── */
+    .progress-row {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: none;
+    }
+    .progress-row.visible { display: block; }
+    .progress-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
+    .progress-fill  { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s ease; }
+    .progress-meta  { display: flex; align-items: center; justify-content: space-between; }
+    #progressText   { font-size: 11px; color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .controls       { display: flex; gap: 5px; flex-shrink: 0; margin-left: 8px; }
+    .btn-ctrl {
+      padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border);
+      background: transparent; font-size: 10px; font-weight: 600; cursor: pointer;
+    }
+    #pauseBtn { color: var(--info); border-color: var(--btn-pause-brd); }
+    #pauseBtn:hover { background: var(--btn-pause-hov); }
+    #stopBtn  { color: var(--err);  border-color: var(--btn-stop-brd); }
+    #stopBtn:hover { background: var(--btn-stop-hov); }
+
+    /* ── Status / CTA ─────────────────────── */
+    .status-row {
+      padding: 9px 14px;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    #statusMsg { font-size: 12px; color: var(--muted); flex: 1; }
+    #statusMsg.ok   { color: var(--ok); }
+    #statusMsg.err  { color: var(--err); }
+    #statusMsg.info { color: var(--info); }
+
+    #viewResultsBtn {
+      padding: 4px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--ok-border-dim);
+      background: transparent;
+      color: var(--ok);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      display: none;
+      white-space: nowrap;
+    }
+    #viewResultsBtn:hover { background: var(--ok-bg); }
+    #viewResultsBtn.visible { display: block; }
+
+    /* ── Toast ───────────────────────────── */
+    .toast-wrap {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+    }
+    .toast {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 15px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      max-width: 310px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: 0 4px 20px rgba(0,0,0,.35);
+      animation: toast-in .18s ease;
+      pointer-events: auto;
+    }
+    .toast::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: currentColor;
+      opacity: .75;
+    }
+    .toast.ok   { border-color: var(--ok);   color: var(--ok); }
+    .toast.err  { border-color: var(--err);  color: var(--err); }
+    .toast.info { border-color: var(--info); color: var(--info); }
+    .toast.warn { border-color: var(--warn); color: var(--warn); }
+    .toast.sticky { font-weight: 600; }
+    .toast.out  { animation: toast-out .25s ease forwards; }
+    @keyframes toast-in  { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes toast-out { from { opacity:1; transform:translateY(0);    } to { opacity:0; transform:translateY(-8px); } }
+
+    /* ── Tooltips ─────────────────────────── */
+    [data-tooltip] { position: relative; }
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: calc(100% + 7px);
+      left: 50%;
+      transform: translateX(-50%) scale(.95);
+      background: var(--bg2);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.4;
+      white-space: nowrap;
+      padding: 5px 9px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      box-shadow: 0 3px 10px rgba(0,0,0,.2);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .12s, transform .12s;
+      z-index: 200;
+    }
+    [data-tooltip]::before {
+      content: '';
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-bottom-color: var(--border);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .12s;
+      z-index: 200;
+    }
+    [data-tooltip]:hover::after { opacity: 1; transform: translateX(-50%) scale(1); }
+    [data-tooltip]:hover::before { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <div class="header">
+    <h1>dHunt</h1>
+    <div class="theme-toggle" id="themeToggle">
+      <button data-theme="light" title="Light">☀</button>
+      <button data-theme="system" title="System">⚙</button>
+      <button data-theme="dark" title="Dark">☽</button>
+    </div>
+    <button class="btn-dash" id="dashBtn" data-tooltip="Open the full dashboard">Dashboard ↗</button>
+  </div>
+
+  <!-- Interrupted hunt banner -->
+  <div class="interrupted-row" id="interruptedRow">
+    <span class="interrupted-label">⚠ Previous hunt was interrupted.</span>
+    <div class="interrupted-btns">
+      <button class="btn-resume"  id="resumeBtn"  data-tooltip="Resume from where hunt left off">Resume Hunt</button>
+      <button class="btn-restart" id="restartBtn" data-tooltip="Discard progress and start fresh">Restart</button>
+    </div>
+  </div>
+
+  <div class="search-row">
+    <input type="text" id="keyword" placeholder="Enter product keyword…" autocomplete="off">
+    <button id="startBtn" data-tooltip="Search and score Daraz products">Start Hunt</button>
+  </div>
+
+  <div class="cooldown-row" id="cooldownRow">
+    ⏱ Cooldown: <strong id="cooldownTimer">0s</strong> remaining
+  </div>
+
+  <div class="progress-row" id="progressRow">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-meta">
+      <span id="progressText">Working…</span>
+      <div class="controls">
+        <button class="btn-ctrl" id="pauseBtn" data-tooltip="Pause hunt — can be resumed">Pause</button>
+        <button class="btn-ctrl" id="stopBtn"  data-tooltip="Stop hunt and keep current results">Stop</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-row">
+    <span id="statusMsg">Ready.</span>
+    <button id="viewResultsBtn" data-tooltip="Open scored results in dashboard">View Results ↗</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
