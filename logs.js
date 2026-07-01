@@ -144,9 +144,9 @@ let fullTabResults = [];  // unfiltered results for active tab
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 let toastTimer = null;
-function showToast(msg, duration = 2500) {
+function showToast(msg, type = '', duration = 2500) {
   dToast.textContent = msg;
-  dToast.classList.add('show');
+  dToast.className = 'toast show' + (type ? ' toast-' + type : '');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => dToast.classList.remove('show'), duration);
 }
@@ -207,6 +207,7 @@ async function navigateTo(page) {
     renderedLogCount = 0;
     renderLogs(state?.logs || []);
   } else if (page === 'results') {
+    clearQuickFilter();
     await renderResultsTabs();
   } else if (page === 'history') {
     await loadHistory();
@@ -798,7 +799,7 @@ function renderResults(results) {
       `<td class="col-link">${url ? `<a class="ext-link" href="${url}" target="_blank" rel="noreferrer" title="Open on Daraz">↗</a>` : '—'}</td>` +
       `<td class="col-del"><button class="del-btn" title="Remove this result">✕</button></td>`;
 
-    tr.querySelector('.del-btn').addEventListener('click', () => deleteResult(p));
+    tr.querySelector('.del-btn')?.addEventListener('click', () => deleteResult(p));
     const sellerBtn = tr.querySelector('.seller-link');
     if (sellerBtn) sellerBtn.addEventListener('click', () => showSellerModal(sellerBtn.dataset.seller, currentResults));
     tr.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); showContextMenu(e, buildCtxItems(p, e.target)); });
@@ -979,7 +980,7 @@ async function saveConfig(silent = false) {
   };
 
   await chrome.storage.local.set({ [CONFIG_KEY]: config });
-  if (!silent) showToast('✓ Settings saved');
+  if (!silent) showToast('✓ Settings saved', 'success');
 }
 
 // ── Cooldown ──────────────────────────────────────────────────────────────────
@@ -1069,7 +1070,7 @@ function buildCtxItems(p, targetEl) {
 }
 
 function copyCtx(text, toastMsg) {
-  navigator.clipboard.writeText(text).then(() => showToast('✓ ' + toastMsg));
+  navigator.clipboard.writeText(text).then(() => showToast('✓ ' + toastMsg, 'success'));
 }
 
 function showContextMenu(e, items) {

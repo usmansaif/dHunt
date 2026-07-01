@@ -26,7 +26,7 @@ const DEFAULT_STATE = {
 const DEFAULT_CONFIG = {
   maxPages:       5,
   maxProducts:    80,
-  sortBy:         'popularity',  // popularity | priceasc | pricedesc | ratings | latest
+  sortBy:         'popularity',  // popularity | priceasc | pricedesc
   priceMin:       '',
   priceMax:       '',
   minRating:      0,
@@ -221,6 +221,17 @@ async function extractListings(tabId, retries = 3) {
   return { products: [], count: 0 };
 }
 
+async function extractProductDetailsFromTab(tabId, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await chrome.tabs.sendMessage(tabId, { action: 'extractProductDetails' });
+      if (res && res.title && res.title.length > 2) return res;
+    } catch (e) {}
+    if (i < retries - 1) await randomDelay(2500, 3500);
+  }
+  return {};
+}
+
 // ── Control signal check ──────────────────────────────────────────────────────
 
 async function checkSignal() {
@@ -250,16 +261,16 @@ function filterProduct(p, config) {
     if (config.priceMin !== '' && price > 0 && price < parseFloat(config.priceMin)) return false;
     if (config.priceMax !== '' && price > 0 && price > parseFloat(config.priceMax)) return false;
   }
-  if (config.minRating > 0) {
-    if ((parseFloat(p.rating || '0') || 0) < config.minRating) return false;
+  if (config.minRating > 0 && p.rating) {
+    if ((parseFloat(p.rating) || 0) < config.minRating) return false;
   }
   if (config.minReviews > 0) {
-    const reviews = parseInt((p.reviewCount || '').replace(/[^0-9]/g, '') || '0') || 0;
-    if (reviews < config.minReviews) return false;
+    const rcRaw = (p.reviewCount || '').replace(/[^0-9]/g, '');
+    if (rcRaw && parseInt(rcRaw) < config.minReviews) return false;
   }
   if (config.brandFilter === 'branded' && !p.brand) return false;
   if (config.brandFilter === 'nobrand' && p.brand) return false;
-  if (config.minImages > 0 && (p.imagesCount || 0) < config.minImages) return false;
+  if (config.minImages > 0 && p.imagesCount > 0 && p.imagesCount < config.minImages) return false;
   if (config.freeShipping && !p.freeShipping) return false;
   if (config.keywordInclude) {
     const lc = (p.title || '').toLowerCase();
@@ -364,7 +375,7 @@ async function handleHunt(keyword, sendResponse, resumeMode) {
   const maxProducts = Math.min(Math.max(1, config.maxProducts || 80), 200);
   const maxPages    = Math.min(Math.max(1, config.maxPages    || 5),  20);
 
-  const SORT_MAP = { popularity: 'popularity', priceasc: 'priceasc', pricedesc: 'pricedesc', ratings: 'ratings', latest: 'latest' };
+  const SORT_MAP = { popularity: 'popularity', priceasc: 'priceasc', pricedesc: 'pricedesc' };
   const sortParam = SORT_MAP[config.sortBy] || 'popularity';
 
   // Resume checkpoint
@@ -499,9 +510,9 @@ async function handleHunt(keyword, sendResponse, resumeMode) {
 
       try {
         await navigateWithRetry(huntTab.id, listing.url);
-        await randomDelay(1500, 3000);
+        await randomDelay(2500, 4000);
 
-        const details = await chrome.tabs.sendMessage(huntTab.id, { action: 'extractProductDetails' });
+        const details = await extractProductDetailsFromTab(huntTab.id);
         const merged = { ...listing, ...details };
 
         if (!filterProduct(merged, config)) {

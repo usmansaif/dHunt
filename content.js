@@ -169,6 +169,24 @@ function getNextPageUrl() {
 // ── Product detail extraction ─────────────────────────────────────────────────
 
 function extractProductDetails() {
+  // ── JSON-LD structured data (most reliable across layout changes) ─────────
+  let ld = {}, ldOffer = null, ldRating = null;
+  for (const s of document.querySelectorAll('script[type="application/ld+json"]')) {
+    try {
+      const d = JSON.parse(s.textContent);
+      const arr = Array.isArray(d) ? d : [d];
+      for (const item of arr) {
+        const t = item['@type'];
+        if (t === 'Product' || (Array.isArray(t) && t.includes('Product'))) {
+          ld = item; break;
+        }
+      }
+    } catch (e) {}
+    if (ld.name) break;
+  }
+  if (ld.offers) ldOffer = Array.isArray(ld.offers) ? ld.offers[0] : ld.offers;
+  if (ld.aggregateRating) ldRating = ld.aggregateRating;
+
   function first(...selectors) {
     for (const sel of selectors) {
       try {
@@ -182,37 +200,53 @@ function extractProductDetails() {
     return '';
   }
 
-  // Title
-  const title = first(
-    'h1[class*="pdp-mod-product-badge-title"]',
-    '[class*="pdp-title"]',
-    'h1[class*="title"]',
-    '[class*="product-title"] h1',
-    'h1'
+  // ── Title ─────────────────────────────────────────────────────────────────
+  const title = (
+    ld.name?.trim() ||
+    (document.querySelector('meta[property="og:title"]') || {}).content?.trim() ||
+    first(
+      'h1[class*="pdp-mod-product-badge-title"]', '[class*="pdp-title"]',
+      'h1[class*="title"]', '[class*="product-title"] h1',
+      '[class*="title--"]', '[class*="product-name"]', 'h1'
+    ) || ''
   );
 
-  // Current price
-  const currentPrice = first(
-    '[class*="pdp-price_size_xl"]',
-    '[class*="pdp-price_color_orange"]',
-    '[class*="pdp-price"][class*="color_orange"]',
-    '[class*="price_color_orange"]',
-    '[class*="pdp-price"]:not([class*="deleted"]):not([class*="origin"])',
-    '[class*="price"]'
-  );
+  // ── Current price ─────────────────────────────────────────────────────────
+  let currentPrice = '';
+  if (ldOffer?.price) {
+    currentPrice = 'Rs. ' + ldOffer.price;
+  } else {
+    currentPrice = first(
+      '[class*="pdp-price_size_xl"]', '[class*="pdp-price_color_orange"]',
+      '[class*="pdp-price"][class*="color_orange"]', '[class*="price_color_orange"]',
+      '[class*="pdp-price"]:not([class*="deleted"]):not([class*="origin"])',
+      '[class*="price--current"]', '[class*="currentPrice"]', '[class*="sale-price"]',
+      '[class*="price"][class*="sale"]', '[class*="price"][class*="current"]',
+      '[class*="price"][class*="offer"]'
+    );
+    if (!currentPrice) {
+      for (const el of document.querySelectorAll('[class*="price"]')) {
+        const txt = el.textContent.trim();
+        if (/(?:Rs\.?|PKR|₨)\s*[\d,]+/.test(txt) && txt.length < 30 && !el.querySelector('[class*="price"]')) {
+          currentPrice = txt; break;
+        }
+      }
+    }
+  }
 
-  // Original / struck-through price
+  // ── Original / struck-through price ───────────────────────────────────────
   const originalPrice = first(
-    '[class*="pdp-price_type_deleted"]',
-    '[class*="price_type_deleted"]',
-    '[class*="origin-price"]',
-    'del[class*="price"]',
-    's[class*="price"]',
-    'del'
+    '[class*="pdp-price_type_deleted"]', '[class*="price_type_deleted"]',
+    '[class*="origin-price"]', '[class*="originalPrice"]', '[class*="price--origin"]',
+    '[class*="price"][class*="delete"]', '[class*="price"][class*="origin"]',
+    'del[class*="price"]', 's[class*="price"]', 'del'
   );
 
-  // Discount %
-  let discountPct = first('[class*="discount"][class*="percent"]', '[class*="percent-off"]');
+  // ── Discount % ────────────────────────────────────────────────────────────
+  let discountPct = first(
+    '[class*="discount"][class*="percent"]', '[class*="percent-off"]',
+    '[class*="discount-badge"]', '[class*="badge--discount"]', '[class*="discount"]'
+  );
   const discMatch = discountPct.match(/(\d+)\s*%/);
   discountPct = discMatch ? discMatch[1] + '%' : '';
   if (!discountPct && currentPrice && originalPrice) {
@@ -223,35 +257,47 @@ function extractProductDetails() {
     }
   }
 
-  // Rating
-  let rating = first(
-    '[class*="score-average"]',
-    '[class*="pdp-review"] [class*="average"]',
-    '[class*="rating"] [class*="score"]',
-    '[class*="score"] span'
-  );
-  const ratingMatch = rating.match(/([0-9.]+)/);
-  rating = ratingMatch ? ratingMatch[1] : '';
-
-  // Review count
-  let reviewCount = '';
-  const rcEl = document.querySelector(
-    '[class*="pdp-review-count"], [class*="count-review"], [class*="review-count"]'
-  );
-  if (rcEl) reviewCount = rcEl.textContent.replace(/[^0-9]/g, '');
-  if (!reviewCount) {
-    const m = (document.body.innerText || '').match(/\(?\s*([0-9,]+)\s*(?:Ratings?|Reviews?|ratings?)\s*\)?/);
-    if (m) reviewCount = m[1].replace(/,/g, '');
+  // ── Rating ────────────────────────────────────────────────────────────────
+  let rating = '';
+  if (ldRating?.ratingValue) {
+    rating = String(ldRating.ratingValue);
+  } else {
+    const raw = first(
+      '[class*="score-average"]', '[class*="pdp-review"] [class*="average"]',
+      '[class*="rating"][class*="score"]', '[class*="score"] span',
+      '[class*="rating--score"]', '[class*="average-rating"]',
+      '[class*="review"] [class*="score"]', '[class*="rating"]'
+    );
+    const rm = raw.match(/([0-9.]+)/);
+    rating = rm ? rm[1] : '';
+    if (rating && (parseFloat(rating) < 0 || parseFloat(rating) > 5)) rating = '';
   }
 
-  // Stock status
+  // ── Review count ──────────────────────────────────────────────────────────
+  let reviewCount = '';
+  if (ldRating?.reviewCount || ldRating?.ratingCount) {
+    reviewCount = String(ldRating.reviewCount || ldRating.ratingCount || '');
+  } else {
+    const rcEl = document.querySelector(
+      '[class*="pdp-review-count"], [class*="count-review"], [class*="review-count"], ' +
+      '[class*="review--count"], [class*="reviews-count"], [class*="rating-count"]'
+    );
+    if (rcEl) reviewCount = rcEl.textContent.replace(/[^0-9]/g, '');
+    if (!reviewCount) {
+      const m = (document.body.innerText || '').match(/\(?\s*([0-9,]+)\s*(?:Ratings?|Reviews?|ratings?)\s*\)?/);
+      if (m) reviewCount = m[1].replace(/,/g, '');
+    }
+  }
+
+  // ── Stock status ──────────────────────────────────────────────────────────
   const soldOutEl = document.querySelector(
     '[class*="sold-out"], [class*="soldOut"], [class*="out-of-stock"], [class*="outOfStock"]'
   );
   let stockStatus = soldOutEl ? 'Out of Stock' : '';
   if (!stockStatus) {
     const addToCartBtn = document.querySelector(
-      '[data-qa-locator="add-to-cart"], [class*="add-to-cart"], [class*="btn-cart"]'
+      '[data-qa-locator="add-to-cart"], [class*="add-to-cart"], [class*="btn-cart"], ' +
+      'button[class*="cart"], [class*="addToCart"]'
     );
     stockStatus = addToCartBtn ? 'In Stock' : 'Unknown';
   }
@@ -263,23 +309,23 @@ function extractProductDetails() {
     stockStatus = m ? `Low Stock (${m[1]} left)` : 'Low Stock';
   }
 
-  // Mall badge
+  // ── Mall badge ────────────────────────────────────────────────────────────
   const isMall = !!(
     document.querySelector('[class*="lazmall"], [class*="LazMall"], [class*="darazMall"]') ||
     document.querySelector('[alt*="Daraz Mall" i], [alt*="LazMall" i]') ||
-    document.querySelector('[class*="mall-icon"], [class*="mallIcon"]')
+    document.querySelector('[class*="mall-icon"], [class*="mallIcon"]') ||
+    (document.body.textContent || '').includes('Daraz Mall')
   );
 
-  // Seller
+  // ── Seller ────────────────────────────────────────────────────────────────
   const sellerEl = document.querySelector(
     '[class*="seller-name"] a, [class*="pdp-seller"] a, ' +
-    '[class*="shop-name"] a, [class*="store-name"] a, [class*="sold-by"] a'
+    '[class*="shop-name"] a, [class*="store-name"] a, [class*="sold-by"] a, ' +
+    '[class*="seller"] a, [class*="store"] a[href*="/shop/"]'
   );
   const seller = sellerEl ? sellerEl.textContent.trim() : '';
 
-  // ── Extended fields ───────────────────────────────────────────────────────
-
-  // Category (breadcrumb — skip first "Home" crumb)
+  // ── Category (breadcrumb) ─────────────────────────────────────────────────
   const crumbs = Array.from(document.querySelectorAll(
     '[class*="breadcrumb"] a, [class*="Breadcrumb"] a, nav[aria-label*="breadcrumb" i] a'
   ));
@@ -287,57 +333,65 @@ function extractProductDetails() {
     ? crumbs.slice(1, -1).map(b => b.textContent.trim()).filter(Boolean).join(' > ')
     : (crumbs.length === 1 ? crumbs[0].textContent.trim() : '');
 
-  // Brand — dedicated element first, then specs table
-  let brand = first(
-    '[class*="pdp-brand"] a',
-    '[class*="brand-name"] a',
-    '[class*="pdp-header-store-info"] a'
-  );
+  // ── Brand ─────────────────────────────────────────────────────────────────
+  let brand = ld.brand?.name || '';
+  if (!brand) {
+    brand = first(
+      '[class*="pdp-brand"] a', '[class*="brand-name"] a',
+      '[class*="pdp-header-store-info"] a', '[class*="brand"] a',
+      '[class*="brand"]'
+    );
+  }
   if (!brand) {
     const specRows = document.querySelectorAll(
-      '[class*="specification"] tr, [class*="Specification"] tr, [class*="pdp-props"] tr'
+      '[class*="specification"] tr, [class*="Specification"] tr, ' +
+      '[class*="pdp-props"] tr, [class*="specs"] tr, [class*="properties"] tr'
     );
     for (const row of specRows) {
       const cells = row.querySelectorAll('td');
       if (cells.length >= 2 && /brand/i.test(cells[0].textContent)) {
-        brand = cells[1].textContent.trim();
-        break;
+        brand = cells[1].textContent.trim(); break;
       }
     }
   }
 
-  // Images count — count gallery thumbnails
+  // ── Images count ──────────────────────────────────────────────────────────
   let imagesCount = document.querySelectorAll(
-    '[class*="item-gallery__image-item"], [class*="gallery"] [class*="thumb"] img'
+    '[class*="item-gallery__image-item"], [class*="gallery"] [class*="thumb"] img, ' +
+    '[class*="gallery-item"] img, [class*="thumbnail"] img'
   ).length;
   if (imagesCount === 0) {
     imagesCount = document.querySelectorAll(
-      '[class*="pdp-mod-main-pic"] img, [class*="gallery-preview"] img'
+      '[class*="pdp-mod-main-pic"] img, [class*="gallery-preview"] img, ' +
+      '[class*="gallery"] img'
     ).length;
   }
 
-  // Video available
+  // ── Video available ───────────────────────────────────────────────────────
   const videoAvailable = !!(
     document.querySelector('video') ||
-    document.querySelector('[class*="pdp-video"], [class*="video-player"], [class*="pdp-video-btn"]')
+    document.querySelector('[class*="pdp-video"], [class*="video-player"], [class*="pdp-video-btn"], [class*="video-btn"]')
   );
 
-  // Description length
+  // ── Description length ────────────────────────────────────────────────────
   const descEl = document.querySelector(
-    '[class*="pdp-product-desc"], [class*="detail-desc"], [class*="pdp-block__desc-content"]'
+    '[class*="pdp-product-desc"], [class*="detail-desc"], [class*="pdp-block__desc-content"], ' +
+    '[class*="product-desc"], [class*="description"]'
   );
   const descriptionLength = descEl ? (descEl.innerText || descEl.textContent || '').trim().length : 0;
 
-  // Specifications count
+  // ── Specifications count ──────────────────────────────────────────────────
   const specificationsCount = document.querySelectorAll(
     '[class*="pdp-props"] tr, [class*="specification"] tr, ' +
-    '[class*="Specifications"] tr, [class*="pdp-specifications"] tr'
+    '[class*="Specifications"] tr, [class*="pdp-specifications"] tr, ' +
+    '[class*="specs"] tr, [class*="properties"] tr'
   ).length;
 
-  // Variants count (non-disabled options)
+  // ── Variants count ────────────────────────────────────────────────────────
   const variantsCount = document.querySelectorAll(
     '[class*="sku-variable"] li:not([class*="disabled"]), ' +
-    '[class*="pdp-mod-sku"] [class*="sku-variable"] > ul > li'
+    '[class*="pdp-mod-sku"] [class*="sku-variable"] > ul > li, ' +
+    '[class*="sku"] li:not([class*="disabled"])'
   ).length;
 
   return {

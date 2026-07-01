@@ -155,6 +155,10 @@
     /* Toast */
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-size: 12px; padding: 8px 18px; border-radius: 20px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; white-space: nowrap; z-index: 999; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.toast-success { background: #166534; border-color: #16a34a; color: #bbf7d0; }
+    .toast.toast-error   { background: #7f1d1d; border-color: #dc2626; color: #fecaca; }
+    .toast.toast-warning { background: #78350f; border-color: #d97706; color: #fde68a; }
+    .toast.toast-info    { background: #1e3a5f; border-color: #3b82f6; color: #bfdbfe; }
 
     /* ── Buttons ─────────────────────────────────────────────── */
     .btn { padding: 6px 13px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
@@ -289,7 +293,7 @@
     }
     .toolbar-count { font-size: 12px; color: var(--muted); flex: 1; }
 
-    .results-table-wrap { overflow: auto; flex: 1; }
+    .results-table-wrap { overflow: auto; flex: 1; min-height: 0; }
 
     /* Quick Filter bar */
     .qf-bar { display: none; align-items: center; gap: 10px; padding: 9px 20px; flex-shrink: 0; background: var(--bg3); border-bottom: 1px solid var(--border); }
@@ -793,8 +797,6 @@
                 <option value="popularity">Popularity</option>
                 <option value="priceasc">Price: Low → High</option>
                 <option value="pricedesc">Price: High → Low</option>
-                <option value="ratings">Rating</option>
-                <option value="latest">Newest</option>
               </select>
               <span class="cfg-hint">controls the Daraz search sort order</span>
             </div>
